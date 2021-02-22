@@ -6,7 +6,88 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+    let pageOption, pageSelect;
+    let typeOption, typeSelect;
 
+    const handleResponse = (xhr) => {
+        const type = xhr.getResponseHeader('content-type');
+
+        if(type === 'application/json' || type === 'text/xml') {
+          const content = document.querySelector('#content');
+
+          const h1 = document.createElement('h1');
+          const p = document.createElement('p');
+
+          switch (xhr.status) {
+            case 200:
+              h1.textContent = "Success";
+              break;
+            case 400:
+              h1.textContent = "Bad Request";
+              break;
+            case 401:
+              h1.textContent = "Unauthorized";
+              break;
+            case 403:
+              h1.textContent = "Forbidden";
+              break;
+            case 500:
+              h1.textContent = "Internal Server Error";
+              break;
+            case 404:
+              h1.textContent = "Not Found";
+              break;
+            default:
+              h1.textContent = "Not Implemented";
+              break;
+          }
+          console.log(xhr.response);
+          if(type === 'application/json') {
+            const obj = JSON.parse(xhr.response);
+            p.textContent = `${obj.message}`;
+            
+          } else if (type === 'text/xml') {
+            const message = xhr.responseXML.querySelector('message').textContent;
+
+            p.textContent = message;
+          }
+
+          content.appendChild(h1);
+          content.appendChild(p);
+        }
+    };
+
+    const sendAjax = (url, acceptedType) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('GET', url);
+      xhr.setRequestHeader('Accept', acceptedType);
+
+      xhr.onload = () => handleResponse(xhr);
+      
+      xhr.send();
+    };
+
+    const init = _ => {
+      pageSelect = document.querySelector('#page');
+      typeSelect = document.querySelector('#type');
+      pageOption = pageSelect.value;
+      typeOption = typeSelect.value;
+
+      pageSelect.addEventListener('change', e => {
+        pageOption = e.target.value;
+      });
+
+      typeSelect.addEventListener('change', e => {
+        typeOption = e.target.value;
+      });
+
+      document.querySelector('#send').addEventListener('click', _ => {
+        sendAjax(pageOption, typeOption);
+      });
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
